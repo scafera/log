@@ -56,6 +56,9 @@ final class LogBundle extends AbstractBundle
                 ->tag('console.command')
             ->set(Command\LogsStatusCommand::class)
                 ->args(['%kernel.logs_dir%', '%kernel.environment%'])
+                ->tag('console.command')
+            ->set(Command\LogsClearCommand::class)
+                ->args(['%kernel.logs_dir%', '%kernel.environment%'])
                 ->tag('console.command');
     }
 }

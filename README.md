@@ -158,6 +158,9 @@ vendor/bin/scafera logs:filter --level=error --search="failed"
 # Limit results (default 50 for both logs:filter and logs:errors)
 vendor/bin/scafera logs:errors --limit=10
 
+# Clear the log file
+vendor/bin/scafera logs:clear
+
 # JSON output (all commands)
 vendor/bin/scafera logs:status --json
 vendor/bin/scafera logs:errors --json
