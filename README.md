@@ -131,6 +131,12 @@ vendor/bin/scafera logs:recent --limit=10
 # Show latest entries filtered by level
 vendor/bin/scafera logs:recent --level=error
 
+# Show only application logs (excludes framework.* events)
+vendor/bin/scafera logs:recent --scope=app
+
+# Show only framework logs
+vendor/bin/scafera logs:recent --scope=framework
+
 # Operational summary — errors/warnings from the last 24 hours (by timestamp), top events, recent failures
 vendor/bin/scafera logs:status
 
@@ -152,8 +158,12 @@ vendor/bin/scafera logs:filter --level=warning
 # Search text in messages or context
 vendor/bin/scafera logs:filter --search="timeout"
 
+# Filter by scope
+vendor/bin/scafera logs:filter --scope=app
+vendor/bin/scafera logs:filter --scope=framework
+
 # Combine filters (AND logic — all conditions must match)
-vendor/bin/scafera logs:filter --level=error --search="failed"
+vendor/bin/scafera logs:filter --level=error --scope=app
 
 # Limit results (default 50 for both logs:filter and logs:errors)
 vendor/bin/scafera logs:errors --limit=10

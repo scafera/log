@@ -22,14 +22,21 @@ final class LogsStatsCommand extends Command
     protected function configure(): void
     {
         $this->addFlag('by-level', description: 'Group by event and severity level');
+        $this->addOpt('scope', description: 'Filter by scope (app or framework)');
         $this->addFlag('json', description: 'Output as JSON');
     }
 
     protected function handle(Input $input, Output $output): int
     {
         $byLevel = $input->option('by-level');
+        $scope = $input->option('scope');
         $asJson = $input->option('json');
         $logFile = LogReader::logFile($this->logsDir, $this->environment);
+
+        if (!LogReader::isValidScope($scope)) {
+            $output->error('Invalid scope. Use "app" or "framework".');
+            return 1;
+        }
 
         if (!is_file($logFile)) {
             $output->warning(sprintf('Log file not found: %s', $logFile));
@@ -40,6 +47,10 @@ final class LogsStatsCommand extends Command
         $levelCounts = [];
 
         foreach (LogReader::read($logFile) as $entry) {
+            if (!LogReader::matchesScope($entry, $scope)) {
+                continue;
+            }
+
             $event = $entry['event'] ?? '(no event)';
             $level = $entry['level'] ?? 'unknown';
 

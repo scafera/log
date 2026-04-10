@@ -78,4 +78,44 @@ final class LogReaderTest extends TestCase
         $this->assertSame('/var/log/dev.log', LogReader::logFile('/var/log', 'dev'));
         $this->assertSame('/var/log/prod.log', LogReader::logFile('/var/log', 'prod'));
     }
+
+    public function testIsValidScope(): void
+    {
+        $this->assertTrue(LogReader::isValidScope(null));
+        $this->assertTrue(LogReader::isValidScope('app'));
+        $this->assertTrue(LogReader::isValidScope('framework'));
+        $this->assertFalse(LogReader::isValidScope('infra'));
+        $this->assertFalse(LogReader::isValidScope(''));
+    }
+
+    public function testMatchesScopeApp(): void
+    {
+        $appEntry = ['event' => 'order.created', 'level' => 'info'];
+        $frameworkEntry = ['event' => 'framework.http.error', 'level' => 'error'];
+        $noEventEntry = ['level' => 'info', 'message' => 'test'];
+
+        $this->assertTrue(LogReader::matchesScope($appEntry, 'app'));
+        $this->assertFalse(LogReader::matchesScope($frameworkEntry, 'app'));
+        $this->assertTrue(LogReader::matchesScope($noEventEntry, 'app'));
+    }
+
+    public function testMatchesScopeFramework(): void
+    {
+        $appEntry = ['event' => 'order.created', 'level' => 'info'];
+        $frameworkEntry = ['event' => 'framework.http.error', 'level' => 'error'];
+        $noEventEntry = ['level' => 'info', 'message' => 'test'];
+
+        $this->assertFalse(LogReader::matchesScope($appEntry, 'framework'));
+        $this->assertTrue(LogReader::matchesScope($frameworkEntry, 'framework'));
+        $this->assertFalse(LogReader::matchesScope($noEventEntry, 'framework'));
+    }
+
+    public function testMatchesScopeNullPassesAll(): void
+    {
+        $appEntry = ['event' => 'order.created'];
+        $frameworkEntry = ['event' => 'framework.http.error'];
+
+        $this->assertTrue(LogReader::matchesScope($appEntry, null));
+        $this->assertTrue(LogReader::matchesScope($frameworkEntry, null));
+    }
 }

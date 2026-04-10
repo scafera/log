@@ -25,6 +25,7 @@ final class LogsFilterCommand extends Command
         $this->addOpt('level', description: 'Filter by severity level');
         $this->addOpt('search', description: 'Filter by text in message or context');
         $this->addOpt('limit', description: 'Maximum entries to display', default: '50');
+        $this->addOpt('scope', description: 'Filter by scope (app or framework)');
         $this->addFlag('json', description: 'Output as JSON');
     }
 
@@ -33,12 +34,18 @@ final class LogsFilterCommand extends Command
         $event = $input->argument('event');
         $level = $input->option('level');
         $search = $input->option('search');
+        $scope = $input->option('scope');
         $limit = (int) $input->option('limit');
         $asJson = $input->option('json');
         $logFile = LogReader::logFile($this->logsDir, $this->environment);
 
-        if ($event === null && $level === null && $search === null) {
-            $output->error('At least one filter is required: event argument, --level, or --search.');
+        if (!LogReader::isValidScope($scope)) {
+            $output->error('Invalid scope. Use "app" or "framework".');
+            return 1;
+        }
+
+        if ($event === null && $level === null && $search === null && $scope === null) {
+            $output->error('At least one filter is required: event argument, --level, --search, or --scope.');
             return 1;
         }
 
@@ -55,6 +62,10 @@ final class LogsFilterCommand extends Command
             }
 
             if ($level !== null && ($entry['level'] ?? '') !== $level) {
+                continue;
+            }
+
+            if (!LogReader::matchesScope($entry, $scope)) {
                 continue;
             }
 

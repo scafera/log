@@ -23,6 +23,7 @@ final class LogsRecentCommand extends Command
     {
         $this->addOpt('limit', description: 'Maximum entries to display', default: '50');
         $this->addOpt('level', description: 'Filter by severity level');
+        $this->addOpt('scope', description: 'Filter by scope (app or framework)');
         $this->addFlag('json', description: 'Output as JSON');
     }
 
@@ -30,8 +31,14 @@ final class LogsRecentCommand extends Command
     {
         $limit = (int) $input->option('limit');
         $level = $input->option('level');
+        $scope = $input->option('scope');
         $asJson = $input->option('json');
         $logFile = LogReader::logFile($this->logsDir, $this->environment);
+
+        if (!LogReader::isValidScope($scope)) {
+            $output->error('Invalid scope. Use "app" or "framework".');
+            return 1;
+        }
 
         if (!is_file($logFile)) {
             $output->warning(sprintf('Log file not found: %s', $logFile));
@@ -43,6 +50,10 @@ final class LogsRecentCommand extends Command
 
         foreach (LogReader::read($logFile) as $entry) {
             if ($level !== null && ($entry['level'] ?? '') !== $level) {
+                continue;
+            }
+
+            if (!LogReader::matchesScope($entry, $scope)) {
                 continue;
             }
 

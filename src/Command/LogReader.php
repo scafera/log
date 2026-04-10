@@ -62,4 +62,21 @@ final class LogReader
     {
         return (self::SEVERITY_ORDER[$level] ?? 0) >= (self::SEVERITY_ORDER[$threshold] ?? 0);
     }
+
+    public static function isValidScope(?string $scope): bool
+    {
+        return $scope === null || $scope === 'app' || $scope === 'framework';
+    }
+
+    public static function matchesScope(array $entry, ?string $scope): bool
+    {
+        if ($scope === null) {
+            return true;
+        }
+
+        $event = $entry['event'] ?? '';
+        $isFramework = str_starts_with($event, 'framework.');
+
+        return $scope === 'framework' ? $isFramework : !$isFramework;
+    }
 }
