@@ -62,10 +62,10 @@ The `event` key is extracted from the context array and promoted to a top-level 
 Each line is a self-contained JSON object:
 
 ```json
-{"timestamp":"2026-04-10T16:22:40.501+00:00","level":"info","message":"Order placed","event":"order.created","context":{"orderId":1}}
+{"timestamp":"2026-04-10T16:22:40.501+00:00","level":"info","message":"Order placed","event":"order.created","ip":"192.168.1.42","context":{"orderId":1}}
 ```
 
-Fields: `timestamp` (RFC3339 with milliseconds), `level` (PSR-3), `message`, `event` (present only when the context includes an `event` key), `context` (remaining context after `event` extraction, omitted if empty).
+Fields: `timestamp` (RFC3339 with milliseconds), `level` (PSR-3), `message`, `event` (present only when the context includes an `event` key), `ip` (client IP address, present only during HTTP requests), `context` (remaining context after `event` extraction, omitted if empty). Client IP is logged automatically during HTTP requests. To disable, override the `StreamLogger` service definition and omit the `RequestStack` argument.
 
 ### Context Serialization
 

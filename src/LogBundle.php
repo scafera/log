@@ -25,6 +25,7 @@ final class LogBundle extends AbstractBundle
                 ->args([
                     '%kernel.logs_dir%',
                     '%kernel.environment%',
+                    service('request_stack')->nullOnInvalid(),
                 ])
                 ->public()
             ->alias(LoggerInterface::class, StreamLogger::class)

@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Scafera\Log;
 
 use Psr\Log\AbstractLogger;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 final class StreamLogger extends AbstractLogger
 {
     private readonly string $logFile;
 
-    public function __construct(string $logsDir, string $environment)
-    {
+    public function __construct(
+        string $logsDir,
+        string $environment,
+        private readonly ?RequestStack $requestStack = null,
+    ) {
         $this->logFile = $logsDir . '/' . $environment . '.log';
     }
 
@@ -26,6 +30,12 @@ final class StreamLogger extends AbstractLogger
         if (isset($context['event'])) {
             $entry['event'] = $context['event'];
             unset($context['event']);
+        }
+
+        $ip = $this->requestStack?->getCurrentRequest()?->getClientIp();
+
+        if ($ip !== null) {
+            $entry['ip'] = $ip;
         }
 
         if ($context !== []) {

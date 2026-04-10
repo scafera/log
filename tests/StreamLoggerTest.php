@@ -6,6 +6,8 @@ namespace Scafera\Log\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Scafera\Log\StreamLogger;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 final class StreamLoggerTest extends TestCase
 {
@@ -175,5 +177,38 @@ final class StreamLoggerTest extends TestCase
 
         $entry = json_decode(file_get_contents($this->tempDir . '/test.log'), true);
         $this->assertSame(['a' => 1, 'b' => ['c' => 2]], $entry['context']['data']);
+    }
+
+    public function testIpIncludedWhenRequestExists(): void
+    {
+        $request = Request::create('/test', 'GET', server: ['REMOTE_ADDR' => '192.168.1.42']);
+        $requestStack = new RequestStack();
+        $requestStack->push($request);
+
+        $logger = new StreamLogger($this->tempDir, 'test', $requestStack);
+        $logger->info('Test', ['event' => 'test.ip']);
+
+        $entry = json_decode(file_get_contents($this->tempDir . '/test.log'), true);
+        $this->assertSame('192.168.1.42', $entry['ip']);
+    }
+
+    public function testIpAbsentWithoutRequestStack(): void
+    {
+        $logger = new StreamLogger($this->tempDir, 'test');
+        $logger->info('Test', ['event' => 'test.noip']);
+
+        $entry = json_decode(file_get_contents($this->tempDir . '/test.log'), true);
+        $this->assertArrayNotHasKey('ip', $entry);
+    }
+
+    public function testIpAbsentWhenNoCurrentRequest(): void
+    {
+        $requestStack = new RequestStack();
+
+        $logger = new StreamLogger($this->tempDir, 'test', $requestStack);
+        $logger->info('Test', ['event' => 'test.norequest']);
+
+        $entry = json_decode(file_get_contents($this->tempDir . '/test.log'), true);
+        $this->assertArrayNotHasKey('ip', $entry);
     }
 }
