@@ -9,8 +9,15 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+
 final class LogBundle extends AbstractBundle
 {
+    public function build(ContainerBuilder $builder): void
+    {
+        $builder->addCompilerPass(new DependencyInjection\DisableSymfonyErrorLoggingPass());
+    }
+
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $container->services()
@@ -34,6 +41,11 @@ final class LogBundle extends AbstractBundle
             ->set(Command\LogsFilterCommand::class)
                 ->args(['%kernel.logs_dir%', '%kernel.environment%'])
                 ->tag('console.command')
+
+            // Framework error logging
+            ->set(Listener\ExceptionSubscriber::class)
+                ->args([service(LoggerInterface::class)])
+                ->tag('kernel.event_subscriber')
 
             // CLI commands — operational
             ->set(Command\LogsErrorsCommand::class)

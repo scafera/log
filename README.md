@@ -4,7 +4,7 @@ Structured logging for the Scafera framework. Implements PSR-3 with a zero-depen
 
 ## Core Idea
 
-Scafera treats logging the same way it treats every other capability — explicit, minimal, and boundary-safe. Every log call is written by the developer at the call site. There are no listeners, middleware, exception handlers, or automatic logging. The logger writes structured JSON Lines with a required `event` field for categorization — required by build-time validation (`scafera validate`), not enforced at runtime.
+Scafera treats logging the same way it treats every other capability — explicit, minimal, and boundary-safe. Application log calls are written by the developer at the call site — no userland listeners, middleware, or automatic logging. Framework-level errors (uncaught exceptions, console failures) are captured automatically by the package as infrastructure. The logger writes structured JSON Lines with a required `event` field for categorization — required by build-time validation (`scafera validate`), not enforced at runtime.
 
 ## Installation
 
@@ -89,6 +89,24 @@ $this->logger->error('Payment failed', [
 Logging failures throw `\RuntimeException`. If the log directory doesn't exist or permissions are wrong, the error is visible immediately — no silent failures. This is a conscious trade-off: a failed log call will break the request flow, because the developer wrote the call and intended the entry to exist. Silent failure would mean the developer believes logging is working when it isn't.
 
 The logger does **not** validate the `event` key at runtime. It writes whatever context it receives. Structured logging (consistent `event` key, lowercase dot notation) is guaranteed only when `EventContextValidator` is run via `scafera validate`.
+
+## Framework Error Logging
+
+When `scafera/log` is installed, uncaught exceptions are automatically logged to the same log file alongside application entries. This is framework infrastructure — the log package takes ownership of error visibility.
+
+**HTTP exceptions** are logged with event `framework.http.error`:
+- 4xx client errors (404, 403, etc.) are logged at `warning` level — these are client mistakes, not system failures
+- 5xx server errors and unhandled exceptions are logged at `error` level
+
+```json
+{"timestamp":"...","level":"warning","message":"No route found for \"GET /nonexistent\"","event":"framework.http.error","context":{"exception":{...},"method":"GET","path":"/nonexistent","status":404}}
+```
+
+**Console exceptions** are logged with event `framework.console.error` at `error` level, including the command name and exit code.
+
+The CLI commands work naturally with framework entries — `logs:errors` shows framework 500s, `logs:filter framework.http.error` isolates framework entries, and `logs:stats` counts them as a distinct event.
+
+Symfony's built-in error logging is disabled via a compiler pass to prevent duplicate entries. Symfony's error response handling (the error page in dev, the error controller in prod) continues to work normally.
 
 ## Build-Time Validation
 
