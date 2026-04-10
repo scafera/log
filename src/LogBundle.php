@@ -48,6 +48,9 @@ final class LogBundle extends AbstractBundle
                 ->tag('kernel.event_subscriber')
 
             // CLI commands — operational
+            ->set(Command\LogsRecentCommand::class)
+                ->args(['%kernel.logs_dir%', '%kernel.environment%'])
+                ->tag('console.command')
             ->set(Command\LogsErrorsCommand::class)
                 ->args(['%kernel.logs_dir%', '%kernel.environment%'])
                 ->tag('console.command')

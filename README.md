@@ -122,6 +122,15 @@ The validator uses token-based scanning (not an AST parser). It detects inline l
 All commands are available via `vendor/bin/scafera`:
 
 ```bash
+# Show latest log entries (default 50)
+vendor/bin/scafera logs:recent
+
+# Show latest 10 entries
+vendor/bin/scafera logs:recent --limit=10
+
+# Show latest entries filtered by level
+vendor/bin/scafera logs:recent --level=error
+
 # Operational summary — errors/warnings from the last 24 hours (by timestamp), top events, recent failures
 vendor/bin/scafera logs:status
 
@@ -153,6 +162,7 @@ vendor/bin/scafera logs:errors --limit=10
 vendor/bin/scafera logs:status --json
 vendor/bin/scafera logs:errors --json
 vendor/bin/scafera logs:stats --json
+vendor/bin/scafera logs:recent --json
 vendor/bin/scafera logs:filter order.created --json
 ```
 
