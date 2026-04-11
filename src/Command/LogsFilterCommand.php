@@ -111,6 +111,7 @@ final class LogsFilterCommand extends Command
         $event = $entry['event'] ?? '';
         $message = $entry['message'] ?? '';
         $context = $entry['context'] ?? null;
+        $scope = str_starts_with($event, 'framework.') ? 'framework' : 'app';
 
         $short = substr($timestamp, 0, 19);
         $short = str_replace('T', ' ', $short);
@@ -118,8 +119,9 @@ final class LogsFilterCommand extends Command
         $contextStr = $context !== null ? '  ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '';
 
         $output->writeln(sprintf(
-            '%s  %-9s %-20s %s%s',
+            '%s  %-11s %-9s %-20s %s%s',
             $short,
+            $scope,
             $level,
             $event,
             $message,
