@@ -162,6 +162,73 @@ final class EventContextValidatorTest extends TestCase
         $this->assertSame([], $violations);
     }
 
+    public function testPassesWithMultiLineCall(): void
+    {
+        $this->writePhp("src/Service.php", <<<'PHP'
+        <?php
+        use Psr\Log\LoggerInterface;
+        class Service {
+            public function __construct(private LoggerInterface $logger) {}
+            public function run(): void {
+                $this->logger->info(
+                    'Order placed',
+                    [
+                        'event' => 'order.created',
+                        'orderId' => 1,
+                    ],
+                );
+            }
+        }
+        PHP);
+
+        $violations = $this->validator->validate($this->tempDir);
+        $this->assertSame([], $violations);
+    }
+
+    public function testFailsOnMultiLineCallMissingEvent(): void
+    {
+        $this->writePhp("src/Service.php", <<<'PHP'
+        <?php
+        use Psr\Log\LoggerInterface;
+        class Service {
+            public function __construct(private LoggerInterface $logger) {}
+            public function run(): void {
+                $this->logger->info(
+                    'Order placed',
+                    [
+                        'orderId' => 1,
+                    ],
+                );
+            }
+        }
+        PHP);
+
+        $violations = $this->validator->validate($this->tempDir);
+        $this->assertCount(1, $violations);
+        $this->assertStringContainsString('missing \'event\' key', $violations[0]);
+    }
+
+    public function testVariableContextIsSkippedAsDocumentedLimitation(): void
+    {
+        // Variable-context logger calls cannot be inspected statically.
+        // The validator silently skips them rather than reporting false positives —
+        // this test pins that documented behaviour (see class-level doc block).
+        $this->writePhp("src/Service.php", <<<'PHP'
+        <?php
+        use Psr\Log\LoggerInterface;
+        class Service {
+            public function __construct(private LoggerInterface $logger) {}
+            public function run(): void {
+                $context = ['event' => 'order.created', 'id' => 1];
+                $this->logger->info('Order placed', $context);
+            }
+        }
+        PHP);
+
+        $violations = $this->validator->validate($this->tempDir);
+        $this->assertSame([], $violations);
+    }
+
     public function testReturnsCorrectName(): void
     {
         $this->assertSame('EventContextValidator', $this->validator->getName());
