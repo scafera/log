@@ -24,7 +24,7 @@ final class ExceptionSubscriberTest extends TestCase
 
     protected function setUp(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $logger->method('log')->willReturnCallback(function (string $level, string $message, array $context) {
             $this->logCalls[] = ['level' => $level, 'message' => $message, 'context' => $context];
         });
@@ -98,7 +98,7 @@ final class ExceptionSubscriberTest extends TestCase
 
     private function createHttpEvent(\Throwable $throwable, string $path, string $method): ExceptionEvent
     {
-        $kernel = $this->createMock(HttpKernelInterface::class);
+        $kernel = $this->createStub(HttpKernelInterface::class);
         $request = Request::create($path, $method);
 
         return new ExceptionEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $throwable);
