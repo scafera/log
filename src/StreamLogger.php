@@ -44,10 +44,24 @@ final class StreamLogger extends AbstractLogger
 
         $line = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
 
-        $result = @file_put_contents($this->logFile, $line, FILE_APPEND | LOCK_EX);
+        $error = null;
+        set_error_handler(static function (int $severity, string $message) use (&$error): bool {
+            $error = $message;
+            return true;
+        });
+
+        try {
+            $result = file_put_contents($this->logFile, $line, FILE_APPEND | LOCK_EX);
+        } finally {
+            restore_error_handler();
+        }
 
         if ($result === false) {
-            throw new \RuntimeException(sprintf('Failed to write log entry to "%s".', $this->logFile));
+            throw new \RuntimeException(sprintf(
+                'Failed to write log entry to "%s": %s',
+                $this->logFile,
+                $error ?? 'unknown error',
+            ));
         }
     }
 
