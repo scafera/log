@@ -86,9 +86,19 @@ $this->logger->error('Payment failed', [
 
 ### Failure Behavior
 
-Logging failures throw `\RuntimeException`. If the log directory doesn't exist or permissions are wrong, the error is visible immediately — no silent failures. This is a conscious trade-off: a failed log call will break the request flow, because the developer wrote the call and intended the entry to exist. Silent failure would mean the developer believes logging is working when it isn't.
+Logging failures throw `\RuntimeException`. If the log directory doesn't exist, permissions are wrong, or the underlying disk cannot accept the write, the error is visible immediately — no silent failures, no fallback channel. The underlying OS error message is captured via a temporary error handler and folded into the exception message, so the exception text includes the real reason (e.g. `No space left on device`, `Permission denied`).
+
+This is a conscious trade-off, documented in [ADR-049](../../docs/ADR/decisions.md#adr-049-logging-is-a-failure-surface-fail-loud-io): Scafera treats logging as part of the system's feedback loop, not a best-effort side channel. A successful request that was not logged is *unobservable*, and in Scafera's model an unobservable success is worse than a visible failure. Projects that need best-effort logging (log loss acceptable to preserve availability) should use a different PSR-3 implementation.
 
 The logger does **not** validate the `event` key at runtime. It writes whatever context it receives. Structured logging (consistent `event` key, lowercase dot notation) is guaranteed only when `EventContextValidator` is run via `scafera validate`.
+
+### Storage and Rotation
+
+Because write failures propagate as exceptions, storage choice matters:
+
+- **Logs must be written to reliable local storage.** Local disk, local tmpfs, or a mounted volume backed by local block storage.
+- **NFS and other network filesystems are not recommended as a log sink.** Network storage introduces failure modes (remote unavailability, soft-mount timeouts, partial writes) that will surface as `RuntimeException` and affect request handling. If you mount `var/log/` over NFS, you accept that transient network issues will cause request failures.
+- **Rotation is delegated to the operating system.** `scafera/log` does not implement in-process rotation — the hot write path is intentionally simple. Use `logrotate` (or an equivalent) configured to rotate on size or date. `StreamLogger` opens the log file fresh on every write via `file_put_contents`, so post-rotation writes go to the new file without needing a reload signal.
 
 ## Framework Error Logging
 
@@ -115,7 +125,7 @@ The `EventContextValidator` runs during `scafera validate` and checks:
 - Every logger call in `src/` includes an `'event' =>` key in the context
 - Event values match the format `domain.action` (lowercase dot notation: `/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/`)
 
-The validator uses token-based scanning (not an AST parser). It detects inline logger calls but cannot detect context built via variables, method returns, or array spread.
+The validator uses PHP's tokenizer (`\PhpToken::tokenize`, not an AST parser). It handles single-line and multi-line logger calls, inspects only the top level of the context array (nested `'event'` keys are ignored), and format-checks event values only when they are string literals — dynamic values like `Event::CREATED` are accepted as present. Context built via a variable (`$logger->info($msg, $context)`), method return, or array spread cannot be inspected and is silently skipped.
 
 ## CLI Commands
 
