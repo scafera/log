@@ -89,17 +89,10 @@ final class LogsStatsCommand extends Command
             return 0;
         }
 
-        if ($byLevel) {
-            $output->table(
-                ['Event', 'Level', 'Count'],
-                array_map(fn(array $row) => [$row['event'], $row['level'], (string) $row['count']], $counts),
-            );
-        } else {
-            $output->table(
-                ['Event', 'Level', 'Count'],
-                array_map(fn(array $row) => [$row['event'], $row['level'], (string) $row['count']], $counts),
-            );
-        }
+        $output->table(
+            ['Event', 'Level', 'Count'],
+            array_map(fn(array $row) => [$row['event'], $row['level'], (string) $row['count']], $counts),
+        );
 
         return 0;
     }
