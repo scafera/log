@@ -208,6 +208,47 @@ final class EventContextValidatorTest extends TestCase
         $this->assertStringContainsString('missing \'event\' key', $violations[0]);
     }
 
+    public function testIgnoresEventKeyNestedInsideInnerArray(): void
+    {
+        // Only the top level of the context array is inspected.
+        // A nested 'event' key must not satisfy the top-level requirement.
+        $this->writePhp("src/Service.php", <<<'PHP'
+        <?php
+        use Psr\Log\LoggerInterface;
+        class Service {
+            public function __construct(private LoggerInterface $logger) {}
+            public function run(): void {
+                $this->logger->info('msg', ['data' => ['event' => 'nested']]);
+            }
+        }
+        PHP);
+
+        $violations = $this->validator->validate($this->tempDir);
+        $this->assertCount(1, $violations);
+        $this->assertStringContainsString('missing \'event\' key', $violations[0]);
+    }
+
+    public function testFindsTopLevelEventWhenNestedArrayAlsoHasEventKey(): void
+    {
+        // Top-level 'event' must be found even when a nested array also has an 'event' key.
+        $this->writePhp("src/Service.php", <<<'PHP'
+        <?php
+        use Psr\Log\LoggerInterface;
+        class Service {
+            public function __construct(private LoggerInterface $logger) {}
+            public function run(): void {
+                $this->logger->info('msg', [
+                    'event' => 'order.created',
+                    'data' => ['event' => 'nested'],
+                ]);
+            }
+        }
+        PHP);
+
+        $violations = $this->validator->validate($this->tempDir);
+        $this->assertSame([], $violations);
+    }
+
     public function testVariableContextIsSkippedAsDocumentedLimitation(): void
     {
         // Variable-context logger calls cannot be inspected statically.
