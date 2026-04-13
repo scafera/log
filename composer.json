@@ -3,9 +3,15 @@
     "description": "Structured logging for the Scafera framework",
     "type": "symfony-bundle",
     "license": "MIT",
+    "keywords": ["scafera", "logging", "log", "php", "psr-3"],
+    "homepage": "https://github.com/scafera/log",
+    "support": {
+        "issues": "https://github.com/scafera/log/issues",
+        "source": "https://github.com/scafera/log"
+    },
     "require": {
         "php": ">=8.4",
-        "scafera/kernel": "^1.0 || dev-main",
+        "scafera/kernel": "^1.0",
         "psr/log": "^3.0"
     },
     "require-dev": {
