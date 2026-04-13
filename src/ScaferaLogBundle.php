@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
-final class LogBundle extends AbstractBundle
+final class ScaferaLogBundle extends AbstractBundle
 {
     public function build(ContainerBuilder $builder): void
     {
