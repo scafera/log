@@ -2,6 +2,8 @@
 
 Structured logging for the Scafera framework. Implements PSR-3 with a zero-dependency `StreamLogger` that writes JSON Lines to `var/log/{environment}.log`.
 
+This is a **capability package**. It adds optional structured logging to a Scafera project. It does not define folder structure or architectural rules — those belong to architecture packages.
+
 ## Core Idea
 
 Scafera treats logging the same way it treats every other capability — explicit, minimal, and boundary-safe. Application log calls are written by the developer at the call site — no userland listeners, middleware, or automatic logging. Framework-level errors (uncaught exceptions, console failures) are captured automatically by the package as infrastructure. The logger writes structured JSON Lines with a required `event` field for categorization — required by build-time validation (`scafera validate`), not enforced at runtime.
@@ -215,18 +217,12 @@ services:
 
 If you must override, your implementation should write JSON Lines to `var/log/{environment}.log` with the same field structure (`timestamp`, `level`, `message`, `event`, `context`) to maintain CLI compatibility.
 
-## Testing
-
-```bash
-# From the consumer project (e.g., milestone3)
-docker compose exec php vendor/bin/phpunit \
-  -c vendor/scafera/log/tests/phpunit.xml \
-  --bootstrap vendor/autoload.php \
-  --testdox
-```
-
 ## Roadmap
 
 ### Monolog Adapter
 
 A built-in adapter for `monolog/monolog` for applications needing log routing, multiple outputs, or advanced formatting. Deferred — `StreamLogger` covers the common case, and applications can wire Monolog manually via the `LoggerInterface` alias override.
+
+## License
+
+MIT
