@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Scafera\Log\Validator;
 
 use Scafera\Kernel\Contract\ValidatorInterface;
+use Scafera\Kernel\InstalledPackages;
 
 /**
  * Validates that every logger call in src/ includes a lowercase dot-notation 'event' key.
@@ -41,7 +42,10 @@ final class EventContextValidator implements ValidatorInterface
 
     public function validate(string $projectDir): array
     {
-        $srcDir = $projectDir . '/src';
+        $architecture = InstalledPackages::resolveArchitecture($projectDir);
+        $srcDir = $architecture !== null
+            ? $projectDir . '/' . rtrim($architecture->getServiceDiscovery($projectDir)['resource'], '/')
+            : $projectDir . '/src';
 
         if (!is_dir($srcDir)) {
             return [];
