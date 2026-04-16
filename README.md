@@ -1,6 +1,12 @@
 # scafera/log
 
-Structured logging for the Scafera framework. Implements PSR-3 with a zero-dependency `StreamLogger` that writes JSON Lines to `var/log/{environment}.log`.
+> **Provides:** Structured logging (PSR-3) for Scafera — a zero-dependency `StreamLogger` that writes JSON Lines to `var/log/{env}.log`. Uncaught framework exceptions are auto-logged; application code writes its own entries.
+>
+> **Depends on:** A Scafera host project (kernel + architecture package) with a writable `var/log/` directory on reliable local storage. Application code injects `Psr\Log\LoggerInterface` — not `StreamLogger` directly.
+>
+> **Extension points:** None by design — `StreamLogger` is not extensible. You can alias `Psr\Log\LoggerInterface` to a custom implementation, but doing so breaks the `logs:*` CLI commands, which depend on the JSON Lines format.
+>
+> **Not responsible for:** Log rotation (delegated to `logrotate`/OS) · best-effort logging (`RuntimeException` on write failure, per ADR-049) · application log routing or multi-destination (use Monolog manually) · runtime validation of the `event` key (build-time only via `EventContextValidator`) · Symfony's default error logging (disabled via compiler pass to avoid duplicate entries).
 
 This is a **capability package**. It adds optional structured logging to a Scafera project. It does not define folder structure or architectural rules — those belong to architecture packages.
 
