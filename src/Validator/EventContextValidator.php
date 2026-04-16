@@ -35,6 +35,11 @@ final class EventContextValidator implements ValidatorInterface
         'emergency' => true,
     ];
 
+    public function getId(): string
+    {
+        return 'log.event-context';
+    }
+
     public function getName(): string
     {
         return 'EventContextValidator';
