@@ -1,5 +1,7 @@
 # scafera/log
 
+Structured logging for the Scafera framework. Implements PSR-3 with a zero-dependency `StreamLogger` that writes JSON Lines to `var/log/{environment}.log`.
+
 > **Provides:** Structured logging (PSR-3) for Scafera — a zero-dependency `StreamLogger` that writes JSON Lines to `var/log/{env}.log`. Uncaught framework exceptions are auto-logged; application code writes its own entries.
 >
 > **Depends on:** A Scafera host project (kernel + architecture package) with a writable `var/log/` directory on reliable local storage. Application code injects `Psr\Log\LoggerInterface` — not `StreamLogger` directly.
